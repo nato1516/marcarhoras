@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Control de Horas</title>
+</head>
+<body>
+
+<!-- 🔐 LOGIN -->
+<div id="login">
+  <h2>Login</h2>
+  <input type="text" id="user" placeholder="Usuario"><br><br>
+  <input type="password" id="pass" placeholder="Contraseña"><br><br>
+  <button onclick="login()">Entrar</button>
+</div>
+
+<!-- 🏠 APP -->
+<div id="app" style="display:none;">
+  <h2 id="bienvenida"></h2>
+
+  <button onclick="marcarEntrada()">Entrada</button>
+  <button onclick="marcarSalida()">Salida</button>
+
+  <h3>Registros:</h3>
+  <ul id="lista"></ul>
+
+  <h3 id="tituloTotal">Total semana:</h3>
+  <p id="total"></p>
+
+  <!-- 👑 SOLO ADMIN -->
+  <div id="adminPanel" style="display:none;">
+    <h3>Usuarios y contraseñas:</h3>
+    <pre id="usuariosLista"></pre>
+  </div>
+
+  <button onclick="logout()">Salir</button>
+</div>
+
+<script>
+// 🔐 Usuarios
+const usuarios = {
+  juan: "1234",
+  maria: "1234",
+  admin: "admin"
+};
+
+let usuarioActual = null;
+
+// 🔐 LOGIN
+function login() {
+  const user = document.getElementById("user").value.toLowerCase();
+  const pass = document.getElementById("pass").value;
+
+  if (!usuarios[user] || usuarios[user] !== pass) {
+    alert("Usuario o contraseña incorrectos");
+    return;
+  }
+
+  usuarioActual = user;
+
+  document.getElementById("login").style.display = "none";
+  document.getElementById("app").style.display = "block";
+  document.getElementById("bienvenida").textContent = "Bienvenido " + user;
+
+  // 👑 Mostrar panel admin
+  if (user === "admin") {
+    document.getElementById("adminPanel").style.display = "block";
+    mostrarUsuarios();
+  }
+
+  mostrar();
+}
+
+// 🔓 LOGOUT
+function logout() {
+  usuarioActual = null;
+  document.getElementById("login").style.display = "block";
+  document.getElementById("app").style.display = "none";
+}
+
+// 🔹 ENTRADA
+function marcarEntrada() {
+  if (usuarioActual === "admin") {
+    alert("Admin no marca horas");
+    return;
+  }
+
+  const ahora = new Date().toISOString();
+  let datos = JSON.parse(localStorage.getItem("registros")) || [];
+
+  const pendiente = datos.find(d => d.user === usuarioActual && !d.salida);
+
+  if (pendiente) {
+    alert("Ya tienes una entrada sin salida");
+    return;
+  }
+
+  datos.push({
+    user: usuarioActual,
+    entrada: ahora,
+    salida: null
+  });
+
+  localStorage.setItem("registros", JSON.stringify(datos));
+  mostrar();
+}
+
+// 🔹 SALIDA
+function marcarSalida() {
+  if (usuarioActual === "admin") {
+    alert("Admin no marca horas");
+    return;
+  }
+
+  const ahora = new Date().toISOString();
+  let datos = JSON.parse(localStorage.getItem("registros")) || [];
+
+  const pendiente = datos.find(d => d.user === usuarioActual && !d.salida);
+
+  if (!pendiente) {
+    alert("No tienes entrada registrada");
+    return;
+  }
+
+  pendiente.salida = ahora;
+
+  localStorage.setItem("registros", JSON.stringify(datos));
+  mostrar();
+}
+
+// 🔹 CALCULAR HORAS
+function calcularHoras(entrada, salida) {
+  return (new Date(salida) - new Date(entrada)) / (1000 * 60 * 60);
+}
+
+// 🔹 FILTRO SEMANA
+function esDeEstaSemana(fecha) {
+  const hoy = new Date();
+  const inicio = new Date(hoy);
+  inicio.setDate(hoy.getDate() - hoy.getDay());
+
+  const fin = new Date(inicio);
+  fin.setDate(inicio.getDate() + 6);
+
+  const f = new Date(fecha);
+  return f >= inicio && f <= fin;
+}
+
+// 🔹 TOTAL USUARIO
+function totalHoras() {
+  let datos = JSON.parse(localStorage.getItem("registros")) || [];
+  let total = 0;
+
+  datos.forEach(d => {
+    if (d.user === usuarioActual && d.salida && esDeEstaSemana(d.entrada)) {
+      total += calcularHoras(d.entrada, d.salida);
+    }
+  });
+
+  return total.toFixed(2);
+}
+
+// 🔹 TOTAL TODOS (ADMIN)
+function totalTodos() {
+  let datos = JSON.parse(localStorage.getItem("registros")) || [];
+  let totales = {};
+
+  datos.forEach(d => {
+    if (d.salida) {
+      let horas = calcularHoras(d.entrada, d.salida);
+
+      if (!totales[d.user]) {
+        totales[d.user] = 0;
+      }
+
+      totales[d.user] += horas;
+    }
+  });
+
+  let texto = "";
+  for (let u in totales) {
+    texto += `${u}: ${totales[u].toFixed(2)} horas\n`;
+  }
+
+  return texto;
+}
+
+// 🔹 MOSTRAR USUARIOS (ADMIN)
+function mostrarUsuarios() {
+  let texto = "";
+
+  for (let user in usuarios) {
+    texto += `${user} - contraseña: ${usuarios[user]}\n`;
+  }
+
+  document.getElementById("usuariosLista").textContent = texto;
+}
+
+// 🔹 MOSTRAR REGISTROS
+function mostrar() {
+  let datos = JSON.parse(localStorage.getItem("registros")) || [];
+  let lista = document.getElementById("lista");
+
+  lista.innerHTML = "";
+
+  datos.forEach(d => {
+    let entrada = new Date(d.entrada).toLocaleString();
+    let salida = d.salida ? new Date(d.salida).toLocaleString() : "Pendiente";
+
+    let li = document.createElement("li");
+
+    // 👑 ADMIN ve todo
+    if (usuarioActual === "admin") {
+      li.textContent = `${d.user} | Entrada: ${entrada} | Salida: ${salida}`;
+      lista.appendChild(li);
+    }
+
+    // 👤 Usuario normal
+    else if (d.user === usuarioActual) {
+      li.textContent = `Entrada: ${entrada} | Salida: ${salida}`;
+      lista.appendChild(li);
+    }
+  });
+
+  // 🔥 Totales
+  if (usuarioActual === "admin") {
+    document.getElementById("total").textContent = totalTodos();
+  } else {
+    document.getElementById("total").textContent =
+      "Horas esta semana: " + totalHoras();
+  }
+}
+</script>
+
+</body>
+</html>
