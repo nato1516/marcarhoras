@@ -24,7 +24,7 @@
   <ul id="lista"></ul>
 
   <h3>Total semana:</h3>
-  <p id="total"></p>
+  <pre id="total"></pre>
 
   <button onclick="logout()">Salir</button>
 </div>
@@ -33,7 +33,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
 import { getFirestore, collection, addDoc, getDocs, query, where, updateDoc, doc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
-// 🔥 TU CONFIG (YA CORRECTA)
+// 🔥 CONFIG FIREBASE
 const firebaseConfig = {
   apiKey: "AIzaSyB3VBSrrzS_tqyJtiYfIgITeMBKc3e4MaI",
   authDomain: "marcahoras.firebaseapp.com",
@@ -46,7 +46,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// 🔐 Usuarios
+// 🔐 USUARIOS
 const usuarios = {
   juan: "1234",
   maria: "1234",
@@ -57,8 +57,8 @@ let usuarioActual = null;
 
 // 🔐 LOGIN
 window.login = function() {
-  const user = document.getElementById("user").value.toLowerCase();
-  const pass = document.getElementById("pass").value;
+  const user = document.getElementById("user").value.toLowerCase().trim();
+  const pass = document.getElementById("pass").value.trim();
 
   if (!usuarios[user] || usuarios[user] !== pass) {
     alert("Usuario o contraseña incorrectos");
@@ -140,10 +140,11 @@ async function mostrar() {
   let lista = document.getElementById("lista");
   lista.innerHTML = "";
 
-  let total = 0;
+  let registros = [];
 
   querySnapshot.forEach((docu) => {
     let d = docu.data();
+    registros.push(d);
 
     let entrada = d.entrada.toDate();
     let salida = d.salida ? d.salida.toDate() : null;
@@ -157,19 +158,68 @@ async function mostrar() {
       li.textContent = `Entrada: ${entrada.toLocaleString()} | Salida: ${salida ? salida.toLocaleString() : "Pendiente"}`;
       lista.appendChild(li);
     }
+  });
 
-    // 🔥 calcular total
-    if (salida) {
-      if (usuarioActual === "admin" || d.user === usuarioActual) {
-        if (esDeEstaSemana(entrada)) {
-          total += calcularHoras(entrada, salida);
-        }
+  mostrarTotales(registros);
+}
+
+// 🔥 TOTAL POR USUARIO
+function totalUsuario(registros, usuario) {
+  let total = 0;
+
+  registros.forEach(d => {
+    if (d.user === usuario && d.salida) {
+      const entrada = d.entrada.toDate();
+      const salida = d.salida.toDate();
+
+      if (esDeEstaSemana(entrada)) {
+        total += calcularHoras(entrada, salida);
       }
     }
   });
 
-  document.getElementById("total").textContent =
-    "Horas esta semana: " + total.toFixed(2);
+  return total.toFixed(2);
+}
+
+// 🔥 TOTAL POR TODOS (ADMIN)
+function totalPorUsuarios(registros) {
+  let totales = {};
+
+  registros.forEach(d => {
+    if (!d.salida) return;
+
+    const entrada = d.entrada.toDate();
+    const salida = d.salida.toDate();
+
+    if (!esDeEstaSemana(entrada)) return;
+
+    const horas = calcularHoras(entrada, salida);
+
+    if (!totales[d.user]) {
+      totales[d.user] = 0;
+    }
+
+    totales[d.user] += horas;
+  });
+
+  return totales;
+}
+
+// 🔥 MOSTRAR TOTALES
+function mostrarTotales(registros) {
+  let texto = "";
+
+  if (usuarioActual === "admin") {
+    const totales = totalPorUsuarios(registros);
+
+    for (let user in totales) {
+      texto += `${user}: ${totales[user].toFixed(2)} horas\n`;
+    }
+  } else {
+    texto = "Tus horas: " + totalUsuario(registros, usuarioActual) + " horas";
+  }
+
+  document.getElementById("total").textContent = texto;
 }
 </script>
 
