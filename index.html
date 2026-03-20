@@ -23,19 +23,29 @@
   <h3>Registros:</h3>
   <ul id="lista"></ul>
 
-  <h3 id="tituloTotal">Total semana:</h3>
+  <h3>Total semana:</h3>
   <p id="total"></p>
-
-  <!-- 👑 SOLO ADMIN -->
-  <div id="adminPanel" style="display:none;">
-    <h3>Usuarios y contraseñas:</h3>
-    <pre id="usuariosLista"></pre>
-  </div>
 
   <button onclick="logout()">Salir</button>
 </div>
 
-<script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, query, where, updateDoc, doc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+
+// 🔥 TU CONFIG (YA CORRECTA)
+const firebaseConfig = {
+  apiKey: "AIzaSyB3VBSrrzS_tqyJtiYfIgITeMBKc3e4MaI",
+  authDomain: "marcahoras.firebaseapp.com",
+  projectId: "marcahoras",
+  storageBucket: "marcahoras.firebasestorage.app",
+  messagingSenderId: "203675648945",
+  appId: "1:203675648945:web:4913badacb9b7be04d7390"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
 // 🔐 Usuarios
 const usuarios = {
   juan: "1234",
@@ -46,7 +56,7 @@ const usuarios = {
 let usuarioActual = null;
 
 // 🔐 LOGIN
-function login() {
+window.login = function() {
   const user = document.getElementById("user").value.toLowerCase();
   const pass = document.getElementById("pass").value;
 
@@ -61,75 +71,54 @@ function login() {
   document.getElementById("app").style.display = "block";
   document.getElementById("bienvenida").textContent = "Bienvenido " + user;
 
-  // 👑 Mostrar panel admin
-  if (user === "admin") {
-    document.getElementById("adminPanel").style.display = "block";
-    mostrarUsuarios();
-  }
-
   mostrar();
-}
+};
 
 // 🔓 LOGOUT
-function logout() {
+window.logout = function() {
   usuarioActual = null;
   document.getElementById("login").style.display = "block";
   document.getElementById("app").style.display = "none";
-}
+};
 
 // 🔹 ENTRADA
-function marcarEntrada() {
+window.marcarEntrada = async function() {
   if (usuarioActual === "admin") {
     alert("Admin no marca horas");
     return;
   }
 
-  const ahora = new Date().toISOString();
-  let datos = JSON.parse(localStorage.getItem("registros")) || [];
-
-  const pendiente = datos.find(d => d.user === usuarioActual && !d.salida);
-
-  if (pendiente) {
-    alert("Ya tienes una entrada sin salida");
-    return;
-  }
-
-  datos.push({
+  await addDoc(collection(db, "registros"), {
     user: usuarioActual,
-    entrada: ahora,
+    entrada: new Date(),
     salida: null
   });
 
-  localStorage.setItem("registros", JSON.stringify(datos));
   mostrar();
-}
+};
 
 // 🔹 SALIDA
-function marcarSalida() {
-  if (usuarioActual === "admin") {
-    alert("Admin no marca horas");
-    return;
-  }
+window.marcarSalida = async function() {
+  const q = query(
+    collection(db, "registros"),
+    where("user", "==", usuarioActual),
+    where("salida", "==", null)
+  );
 
-  const ahora = new Date().toISOString();
-  let datos = JSON.parse(localStorage.getItem("registros")) || [];
+  const querySnapshot = await getDocs(q);
 
-  const pendiente = datos.find(d => d.user === usuarioActual && !d.salida);
+  querySnapshot.forEach(async (docu) => {
+    await updateDoc(doc(db, "registros", docu.id), {
+      salida: new Date()
+    });
+  });
 
-  if (!pendiente) {
-    alert("No tienes entrada registrada");
-    return;
-  }
-
-  pendiente.salida = ahora;
-
-  localStorage.setItem("registros", JSON.stringify(datos));
   mostrar();
-}
+};
 
 // 🔹 CALCULAR HORAS
 function calcularHoras(entrada, salida) {
-  return (new Date(salida) - new Date(entrada)) / (1000 * 60 * 60);
+  return (salida - entrada) / (1000 * 60 * 60);
 }
 
 // 🔹 FILTRO SEMANA
@@ -141,93 +130,46 @@ function esDeEstaSemana(fecha) {
   const fin = new Date(inicio);
   fin.setDate(inicio.getDate() + 6);
 
-  const f = new Date(fecha);
-  return f >= inicio && f <= fin;
+  return fecha >= inicio && fecha <= fin;
 }
 
-// 🔹 TOTAL USUARIO
-function totalHoras() {
-  let datos = JSON.parse(localStorage.getItem("registros")) || [];
-  let total = 0;
+// 🔹 MOSTRAR
+async function mostrar() {
+  const querySnapshot = await getDocs(collection(db, "registros"));
 
-  datos.forEach(d => {
-    if (d.user === usuarioActual && d.salida && esDeEstaSemana(d.entrada)) {
-      total += calcularHoras(d.entrada, d.salida);
-    }
-  });
-
-  return total.toFixed(2);
-}
-
-// 🔹 TOTAL TODOS (ADMIN)
-function totalTodos() {
-  let datos = JSON.parse(localStorage.getItem("registros")) || [];
-  let totales = {};
-
-  datos.forEach(d => {
-    if (d.salida) {
-      let horas = calcularHoras(d.entrada, d.salida);
-
-      if (!totales[d.user]) {
-        totales[d.user] = 0;
-      }
-
-      totales[d.user] += horas;
-    }
-  });
-
-  let texto = "";
-  for (let u in totales) {
-    texto += `${u}: ${totales[u].toFixed(2)} horas\n`;
-  }
-
-  return texto;
-}
-
-// 🔹 MOSTRAR USUARIOS (ADMIN)
-function mostrarUsuarios() {
-  let texto = "";
-
-  for (let user in usuarios) {
-    texto += `${user} - contraseña: ${usuarios[user]}\n`;
-  }
-
-  document.getElementById("usuariosLista").textContent = texto;
-}
-
-// 🔹 MOSTRAR REGISTROS
-function mostrar() {
-  let datos = JSON.parse(localStorage.getItem("registros")) || [];
   let lista = document.getElementById("lista");
-
   lista.innerHTML = "";
 
-  datos.forEach(d => {
-    let entrada = new Date(d.entrada).toLocaleString();
-    let salida = d.salida ? new Date(d.salida).toLocaleString() : "Pendiente";
+  let total = 0;
+
+  querySnapshot.forEach((docu) => {
+    let d = docu.data();
+
+    let entrada = d.entrada.toDate();
+    let salida = d.salida ? d.salida.toDate() : null;
 
     let li = document.createElement("li");
 
-    // 👑 ADMIN ve todo
     if (usuarioActual === "admin") {
-      li.textContent = `${d.user} | Entrada: ${entrada} | Salida: ${salida}`;
+      li.textContent = `${d.user} | Entrada: ${entrada.toLocaleString()} | Salida: ${salida ? salida.toLocaleString() : "Pendiente"}`;
+      lista.appendChild(li);
+    } else if (d.user === usuarioActual) {
+      li.textContent = `Entrada: ${entrada.toLocaleString()} | Salida: ${salida ? salida.toLocaleString() : "Pendiente"}`;
       lista.appendChild(li);
     }
 
-    // 👤 Usuario normal
-    else if (d.user === usuarioActual) {
-      li.textContent = `Entrada: ${entrada} | Salida: ${salida}`;
-      lista.appendChild(li);
+    // 🔥 calcular total
+    if (salida) {
+      if (usuarioActual === "admin" || d.user === usuarioActual) {
+        if (esDeEstaSemana(entrada)) {
+          total += calcularHoras(entrada, salida);
+        }
+      }
     }
   });
 
-  // 🔥 Totales
-  if (usuarioActual === "admin") {
-    document.getElementById("total").textContent = totalTodos();
-  } else {
-    document.getElementById("total").textContent =
-      "Horas esta semana: " + totalHoras();
-  }
+  document.getElementById("total").textContent =
+    "Horas esta semana: " + total.toFixed(2);
 }
 </script>
 
