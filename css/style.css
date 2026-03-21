@@ -211,6 +211,9 @@ body {
     padding: 12px;
     border-radius: 10px;
 }
+.visible-movil{
+    display: none;
+}
 
 /* ============================================================
    7. RESPONSIVE
@@ -263,6 +266,9 @@ body {
 
     #total {
         font-size: 14px;
+    }
+    .visible-web{
+        display: none;
     }
 }
 
