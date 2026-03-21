@@ -1,72 +1,79 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 
 <head>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Control de Horas</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
 </head>
 
 <body>
 
-    <!-- 🔐 LOGIN -->
     <section id="login" class="login">
         <article class="containerLog">
             <div class="form">
-                <h2>Login</h2>
+                <h2><i class="fas fa-lock"></i> Acceso al Sistema</h2>
                 <form>
-                    <label for="usuario">Usuario:</label>
-                    <input type="text" id="user" placeholder="Usuario">
-                    <label for="password">Contraseña:</label>
-                    <input type="password" id="pass" placeholder="Contraseña">
+                    <label for="user">Nombre de Usuario:</label>
+                    <input type="text" id="user" placeholder="Escriba su usuario">
+
+                    <label for="pass">Contraseña:</label>
+                    <input type="password" id="pass" placeholder="Escriba su clave">
                 </form>
-                <button class="buttonLog" onclick="login()">Entrar</button>
+                <button class="buttonLog" onclick="login()">INGRESAR AHORA</button>
             </div>
         </article>
     </section>
 
-    <!-- 🏠 APP -->
     <div id="app" style="display:none;" class="app">
         <div class="container">
 
-            <!-- Título Bienvenida -->
             <header>
                 <h2 id="bienvenida">Bienvenido, Usuario</h2>
             </header>
 
-            <!-- Contenedor columnas -->
             <div class="columnas">
 
-                <!-- Columna izquierda: Entrada/Salida + Total -->
                 <div class="col-izquierda">
+                    <h3 class="seccion-titulo">Acciones</h3>
                     <div class="marcarEntradas">
-                        <button class="botonesApp" onclick="marcarEntrada()">Entrada</button>
-                        <button class="botonesApp" onclick="marcarSalida()">Salida</button>
+                        <button class="botonesApp btn-entrada" onclick="marcarEntrada()">
+                            <div class="icono">🟢</div>
+                            <span>ENTRAR</span>
+                        </button>
+
+                        <button class="botonesApp btn-salida" onclick="marcarSalida()">
+                            <div class="icono">🔴</div>
+                            <span>SALIR</span>
+                        </button>
                     </div>
 
                     <div class="total-semana">
-                        <h3>Total semana:</h3>
-                        <pre id="total"></pre>
+                        <h3>HORAS TOTALES:</h3>
+                        <pre id="total">00:00</pre>
                     </div>
                 </div>
 
-                <!-- Columna derecha: Lista de registros -->
                 <div class="col-derecha">
-                    <h3>Registros:</h3>
-                    <ul id="lista"></ul>
+                    <h3 class="seccion-titulo">Sus Últimos Registros</h3>
+                    <ul id="lista">
+                    </ul>
                 </div>
 
             </div>
 
-            <!-- Botón Salir -->
             <footer>
-                <button class="salir" onclick="logout()">Salir</button>
+                <button class="salir" onclick="logout()">
+                    <i class="fas fa-power-off"></i> CERRAR SESIÓN
+                </button>
             </footer>
 
         </div>
     </div>
-<!-- SOLO ESTO -->
-<script type="module" src="js/main.js"></script>
+
+    <script type="module" src="js/main.js"></script>
 </body>
 
 </html>
