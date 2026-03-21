@@ -1,227 +1,268 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-  <title>Control de Horas</title>
+    <title>Control de Horas</title>
+    <link rel="stylesheet" href="css/style.css">
 </head>
+
 <body>
 
-<!-- 🔐 LOGIN -->
-<div id="login">
-  <h2>Login</h2>
-  <input type="text" id="user" placeholder="Usuario"><br><br>
-  <input type="password" id="pass" placeholder="Contraseña"><br><br>
-  <button onclick="login()">Entrar</button>
-</div>
+    <!-- 🔐 LOGIN -->
+    <section id="login" class="login">
+        <article class="containerLog">
+            <div class="form">
+                <h2>Login</h2>
+                <form>
+                    <label for="usuario">Usuario:</label>
+                    <input type="text" id="user" placeholder="Usuario">
+                    <label for="password">Contraseña:</label>
+                    <input type="password" id="pass" placeholder="Contraseña">
+                </form>
+                <button class="buttonLog" onclick="login()">Entrar</button>
+            </div>
+        </article>
+    </section>
 
-<!-- 🏠 APP -->
-<div id="app" style="display:none;">
-  <h2 id="bienvenida"></h2>
+    <!-- 🏠 APP -->
+    <div id="app" style="display:none;" class="app">
+        <div class="container">
 
-  <button onclick="marcarEntrada()">Entrada</button>
-  <button onclick="marcarSalida()">Salida</button>
+            <!-- Título Bienvenida -->
+            <header>
+                <h2 id="bienvenida">Bienvenido, Usuario</h2>
+            </header>
 
-  <h3>Registros:</h3>
-  <ul id="lista"></ul>
+            <!-- Contenedor columnas -->
+            <div class="columnas">
 
-  <h3>Total semana:</h3>
-  <pre id="total"></pre>
+                <!-- Columna izquierda: Entrada/Salida + Total -->
+                <div class="col-izquierda">
+                    <div class="marcarEntradas">
+                        <button class="botonesApp" onclick="marcarEntrada()">Entrada</button>
+                        <button class="botonesApp" onclick="marcarSalida()">Salida</button>
+                    </div>
 
-  <button onclick="logout()">Salir</button>
-</div>
+                    <div class="total-semana">
+                        <h3>Total semana:</h3>
+                        <pre id="total"></pre>
+                    </div>
+                </div>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, query, where, updateDoc, doc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+                <!-- Columna derecha: Lista de registros -->
+                <div class="col-derecha">
+                    <h3>Registros:</h3>
+                    <ul id="lista"></ul>
+                </div>
 
-// 🔥 CONFIG FIREBASE
-const firebaseConfig = {
-  apiKey: "AIzaSyB3VBSrrzS_tqyJtiYfIgITeMBKc3e4MaI",
-  authDomain: "marcahoras.firebaseapp.com",
-  projectId: "marcahoras",
-  storageBucket: "marcahoras.firebasestorage.app",
-  messagingSenderId: "203675648945",
-  appId: "1:203675648945:web:4913badacb9b7be04d7390"
-};
+            </div>
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+            <!-- Botón Salir -->
+            <footer>
+                <button class="salir" onclick="logout()">Salir</button>
+            </footer>
 
-// 🔐 USUARIOS
-const usuarios = {
-  juan: "1234",
-  maria: "1234",
-  admin: "admin"
-};
+        </div>
+    </div>
+<!-- SOLO ESTO -->
+<script type="module" src="js/main.js"></script>
 
-let usuarioActual = null;
 
-// 🔐 LOGIN
-window.login = function() {
-  const user = document.getElementById("user").value.toLowerCase().trim();
-  const pass = document.getElementById("pass").value.trim();
+<!-- 
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs, query, where, updateDoc, doc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
-  if (!usuarios[user] || usuarios[user] !== pass) {
-    alert("Usuario o contraseña incorrectos");
-    return;
-  }
+        // 🔥 CONFIG FIREBASE
+        const firebaseConfig = {
+            apiKey: "AIzaSyB3VBSrrzS_tqyJtiYfIgITeMBKc3e4MaI",
+            authDomain: "marcahoras.firebaseapp.com",
+            projectId: "marcahoras",
+            storageBucket: "marcahoras.firebasestorage.app",
+            messagingSenderId: "203675648945",
+            appId: "1:203675648945:web:4913badacb9b7be04d7390"
+        };
 
-  usuarioActual = user;
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
 
-  document.getElementById("login").style.display = "none";
-  document.getElementById("app").style.display = "block";
-  document.getElementById("bienvenida").textContent = "Bienvenido " + user;
+        // 🔐 USUARIOS
+        const usuarios = {
+            juan: "1234",
+            maria: "1234",
+            admin: "admin"
+        };
 
-  mostrar();
-};
+        let usuarioActual = null;
 
-// 🔓 LOGOUT
-window.logout = function() {
-  usuarioActual = null;
-  document.getElementById("login").style.display = "block";
-  document.getElementById("app").style.display = "none";
-};
+        // 🔐 LOGIN
+        window.login = function () {
+            const user = document.getElementById("user").value.toLowerCase().trim();
+            const pass = document.getElementById("pass").value.trim();
 
-// 🔹 ENTRADA
-window.marcarEntrada = async function() {
-  if (usuarioActual === "admin") {
-    alert("Admin no marca horas");
-    return;
-  }
+            if (!usuarios[user] || usuarios[user] !== pass) {
+                alert("Usuario o contraseña incorrectos");
+                return;
+            }
 
-  await addDoc(collection(db, "registros"), {
-    user: usuarioActual,
-    entrada: new Date(),
-    salida: null
-  });
+            usuarioActual = user;
 
-  mostrar();
-};
+            document.getElementById("login").style.display = "none";
+            document.getElementById("app").style.display = "block";
+            document.getElementById("bienvenida").textContent = "Bienvenido " + user;
 
-// 🔹 SALIDA
-window.marcarSalida = async function() {
-  const q = query(
-    collection(db, "registros"),
-    where("user", "==", usuarioActual),
-    where("salida", "==", null)
-  );
+            mostrar();
+        };
 
-  const querySnapshot = await getDocs(q);
+        // 🔓 LOGOUT
+        window.logout = function () {
+            usuarioActual = null;
+            document.getElementById("login").style.display = "block";
+            document.getElementById("app").style.display = "none";
+        };
 
-  querySnapshot.forEach(async (docu) => {
-    await updateDoc(doc(db, "registros", docu.id), {
-      salida: new Date()
-    });
-  });
+        // 🔹 ENTRADA
+        window.marcarEntrada = async function () {
+            if (usuarioActual === "admin") {
+                alert("Admin no marca horas");
+                return;
+            }
 
-  mostrar();
-};
+            await addDoc(collection(db, "registros"), {
+                user: usuarioActual,
+                entrada: new Date(),
+                salida: null
+            });
 
-// 🔹 CALCULAR HORAS
-function calcularHoras(entrada, salida) {
-  return (salida - entrada) / (1000 * 60 * 60);
-}
+            mostrar();
+        };
 
-// 🔹 FILTRO SEMANA
-function esDeEstaSemana(fecha) {
-  const hoy = new Date();
-  const inicio = new Date(hoy);
-  inicio.setDate(hoy.getDate() - hoy.getDay());
+        // 🔹 SALIDA
+        window.marcarSalida = async function () {
+            const q = query(
+                collection(db, "registros"),
+                where("user", "==", usuarioActual),
+                where("salida", "==", null)
+            );
 
-  const fin = new Date(inicio);
-  fin.setDate(inicio.getDate() + 6);
+            const querySnapshot = await getDocs(q);
 
-  return fecha >= inicio && fecha <= fin;
-}
+            querySnapshot.forEach(async (docu) => {
+                await updateDoc(doc(db, "registros", docu.id), {
+                    salida: new Date()
+                });
+            });
 
-// 🔹 MOSTRAR
-async function mostrar() {
-  const querySnapshot = await getDocs(collection(db, "registros"));
+            mostrar();
+        };
 
-  let lista = document.getElementById("lista");
-  lista.innerHTML = "";
+        // 🔹 CALCULAR HORAS
+        function calcularHoras(entrada, salida) {
+            return (salida - entrada) / (1000 * 60 * 60);
+        }
 
-  let registros = [];
+        // 🔹 FILTRO SEMANA
+        function esDeEstaSemana(fecha) {
+            const hoy = new Date();
+            const inicio = new Date(hoy);
+            inicio.setDate(hoy.getDate() - hoy.getDay());
 
-  querySnapshot.forEach((docu) => {
-    let d = docu.data();
-    registros.push(d);
+            const fin = new Date(inicio);
+            fin.setDate(inicio.getDate() + 6);
 
-    let entrada = d.entrada.toDate();
-    let salida = d.salida ? d.salida.toDate() : null;
+            return fecha >= inicio && fecha <= fin;
+        }
 
-    let li = document.createElement("li");
+        // 🔹 MOSTRAR
+        async function mostrar() {
+            const querySnapshot = await getDocs(collection(db, "registros"));
 
-    if (usuarioActual === "admin") {
-      li.textContent = `${d.user} | Entrada: ${entrada.toLocaleString()} | Salida: ${salida ? salida.toLocaleString() : "Pendiente"}`;
-      lista.appendChild(li);
-    } else if (d.user === usuarioActual) {
-      li.textContent = `Entrada: ${entrada.toLocaleString()} | Salida: ${salida ? salida.toLocaleString() : "Pendiente"}`;
-      lista.appendChild(li);
-    }
-  });
+            let lista = document.getElementById("lista");
+            lista.innerHTML = "";
 
-  mostrarTotales(registros);
-}
+            let registros = [];
 
-// 🔥 TOTAL POR USUARIO
-function totalUsuario(registros, usuario) {
-  let total = 0;
+            querySnapshot.forEach((docu) => {
+                let d = docu.data();
+                registros.push(d);
 
-  registros.forEach(d => {
-    if (d.user === usuario && d.salida) {
-      const entrada = d.entrada.toDate();
-      const salida = d.salida.toDate();
+                let entrada = d.entrada.toDate();
+                let salida = d.salida ? d.salida.toDate() : null;
 
-      if (esDeEstaSemana(entrada)) {
-        total += calcularHoras(entrada, salida);
-      }
-    }
-  });
+                let li = document.createElement("li");
 
-  return total.toFixed(2);
-}
+                if (usuarioActual === "admin") {
+                    li.textContent = `${d.user} | Entrada: ${entrada.toLocaleString()} | Salida: ${salida ? salida.toLocaleString() : "Pendiente"}`;
+                    lista.appendChild(li);
+                } else if (d.user === usuarioActual) {
+                    li.textContent = `Entrada: ${entrada.toLocaleString()} | Salida: ${salida ? salida.toLocaleString() : "Pendiente"}`;
+                    lista.appendChild(li);
+                }
+            });
 
-// 🔥 TOTAL POR TODOS (ADMIN)
-function totalPorUsuarios(registros) {
-  let totales = {};
+            mostrarTotales(registros);
+        }
 
-  registros.forEach(d => {
-    if (!d.salida) return;
+        // 🔥 TOTAL POR USUARIO
+        function totalUsuario(registros, usuario) {
+            let total = 0;
 
-    const entrada = d.entrada.toDate();
-    const salida = d.salida.toDate();
+            registros.forEach(d => {
+                if (d.user === usuario && d.salida) {
+                    const entrada = d.entrada.toDate();
+                    const salida = d.salida.toDate();
 
-    if (!esDeEstaSemana(entrada)) return;
+                    if (esDeEstaSemana(entrada)) {
+                        total += calcularHoras(entrada, salida);
+                    }
+                }
+            });
 
-    const horas = calcularHoras(entrada, salida);
+            return total.toFixed(2);
+        }
 
-    if (!totales[d.user]) {
-      totales[d.user] = 0;
-    }
+        // 🔥 TOTAL POR TODOS (ADMIN)
+        function totalPorUsuarios(registros) {
+            let totales = {};
 
-    totales[d.user] += horas;
-  });
+            registros.forEach(d => {
+                if (!d.salida) return;
 
-  return totales;
-}
+                const entrada = d.entrada.toDate();
+                const salida = d.salida.toDate();
 
-// 🔥 MOSTRAR TOTALES
-function mostrarTotales(registros) {
-  let texto = "";
+                if (!esDeEstaSemana(entrada)) return;
 
-  if (usuarioActual === "admin") {
-    const totales = totalPorUsuarios(registros);
+                const horas = calcularHoras(entrada, salida);
 
-    for (let user in totales) {
-      texto += `${user}: ${totales[user].toFixed(2)} horas\n`;
-    }
-  } else {
-    texto = "Tus horas: " + totalUsuario(registros, usuarioActual) + " horas";
-  }
+                if (!totales[d.user]) {
+                    totales[d.user] = 0;
+                }
 
-  document.getElementById("total").textContent = texto;
-}
-</script>
+                totales[d.user] += horas;
+            });
+
+            return totales;
+        }
+
+        // 🔥 MOSTRAR TOTALES
+        function mostrarTotales(registros) {
+            let texto = "";
+
+            if (usuarioActual === "admin") {
+                const totales = totalPorUsuarios(registros);
+
+                for (let user in totales) {
+                    texto += `${user}: ${totales[user].toFixed(2)} horas\n`;
+                }
+            } else {
+                texto = "Tus horas: " + totalUsuario(registros, usuarioActual) + " horas";
+            }
+
+            document.getElementById("total").textContent = texto;
+        }
+    </script> -->
 
 </body>
+
 </html>
