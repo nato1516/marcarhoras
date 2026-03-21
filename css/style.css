@@ -35,6 +35,7 @@ body {
     background: linear-gradient(135deg, var(--bg-1), var(--bg-2));
     color: var(--text);
 }
+
 /* ===============================
 LOGIN CONTENEDOR GENERAL
 =============================== */
@@ -55,12 +56,11 @@ CONTENEDOR INTERNO
 }
 
 /* ===============================
-CARD LOGIN (VIDRIO)
+CARD LOGIN
 =============================== */
 .form {
     width: 100%;
-
-    background: rgba(255, 255, 255, 0.06);
+    background: var(--glass);
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
 
@@ -76,13 +76,12 @@ CARD LOGIN (VIDRIO)
 }
 
 /* ===============================
-TÍTULO
+TÍTULO LOGIN
 =============================== */
 .form h2 {
     text-align: center;
     font-size: 26px;
     font-weight: 600;
-    color: #e6e8f0;
 }
 
 /* ===============================
@@ -94,22 +93,19 @@ form {
     gap: 12px;
 }
 
-/* Labels */
 form label {
     font-size: 14px;
-    color: #b8bccd;
+    color: var(--subtext);
 }
 
-/* Inputs */
 form input {
     height: 45px;
     border-radius: 10px;
     border: none;
-
     padding: 0 12px;
 
     background: rgba(255,255,255,0.08);
-    color: #e6e8f0;
+    color: var(--text);
 
     outline: none;
     transition: 0.25s;
@@ -119,9 +115,8 @@ form input::placeholder {
     color: #9ca3af;
 }
 
-/* Focus */
 form input:focus {
-    border: 1px solid #4f46e5;
+    border: 1px solid var(--primary);
     box-shadow: 0 0 10px rgba(79,70,229,0.4);
 }
 
@@ -133,7 +128,7 @@ BOTÓN LOGIN
     border-radius: 12px;
     border: none;
 
-    background: #4f46e5;
+    background: var(--primary);
     color: white;
 
     font-weight: 600;
@@ -147,11 +142,6 @@ BOTÓN LOGIN
     transform: translateY(-2px);
     box-shadow: 0 10px 25px rgba(79,70,229,0.4);
 }
-
-
-
-
-
 
 /* ===============================
 APP CENTRADA
@@ -183,7 +173,8 @@ CARD PRINCIPAL
     display: flex;
     flex-direction: column;
     gap: 30px;
-    margin: 50 auto;
+
+    margin: 50px auto;
 }
 
 /* ===============================
@@ -334,18 +325,83 @@ SCROLL BONITO
 }
 
 /* ===============================
-RESPONSIVE
+MÓVILES PEQUEÑOS
 =============================== */
-@media (max-width: 768px) {
-    .columnas {
-        grid-template-columns: 1fr;
+@media (max-width: 480px) {
+
+    .form {
+        padding: 25px 18px;
+        border-radius: 20px;
+    }
+
+    .form h2 {
+        font-size: 22px;
+    }
+
+    form input {
+        height: 42px;
+        font-size: 14px;
+    }
+
+    .buttonLog {
+        height: 45px;
+        font-size: 14px;
     }
 
     .container {
-        padding: 25px;
+        padding: 20px 15px;
+        border-radius: 20px;
     }
 
     #bienvenida {
-        font-size: 22px;
+        font-size: 20px;
+    }
+
+    .columnas {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+
+    .marcarEntradas {
+        flex-direction: column;
+    }
+
+    .botonesApp {
+        height: 45px;
+        font-size: 14px;
+    }
+
+    .total-semana {
+        font-size: 14px;
+        padding: 15px;
+    }
+
+    #lista {
+        max-height: 250px;
+    }
+
+    #lista li {
+        font-size: 12px;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .salir {
+        width: 100%;
+        height: 45px;
+    }
+}
+
+/* ===============================
+TABLETS
+=============================== */
+@media (max-width: 768px) {
+
+    .container {
+        max-width: 95%;
+    }
+
+    .columnas {
+        grid-template-columns: 1fr;
     }
 }
