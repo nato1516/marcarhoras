@@ -1,4 +1,3 @@
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
 import { getFirestore, collection, addDoc, getDocs, query, where, updateDoc, doc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
@@ -38,7 +37,7 @@ window.login = function () {
 
     document.getElementById("login").style.display = "none";
     document.getElementById("app").style.display = "block";
-    document.getElementById("bienvenida").textContent = "Bienvenido " + user;
+    document.getElementById("bienvenida").textContent = "Bienvenido " + capitalizar(user);
 
     mostrar();
 };
@@ -93,16 +92,19 @@ function calcularHoras(entrada, salida) {
 // 🔹 FILTRO SEMANA
 function esDeEstaSemana(fecha) {
     const hoy = new Date();
+
     const inicio = new Date(hoy);
+    inicio.setHours(0, 0, 0, 0);
     inicio.setDate(hoy.getDate() - hoy.getDay());
 
     const fin = new Date(inicio);
     fin.setDate(inicio.getDate() + 6);
+    fin.setHours(23, 59, 59, 999);
 
     return fecha >= inicio && fecha <= fin;
 }
 
-// 🔹 MOSTRAR
+// 🔹 MOSTRAR REGISTROS
 async function mostrar() {
     const querySnapshot = await getDocs(collection(db, "registros"));
 
@@ -121,10 +123,41 @@ async function mostrar() {
         let li = document.createElement("li");
 
         if (usuarioActual === "admin") {
-            li.textContent = `${d.user} | Entrada: ${entrada.toLocaleString()} | Salida: ${salida ? salida.toLocaleString() : "Pendiente"}`;
+
+            li.innerHTML = `
+                <div class="user">${capitalizar(d.user)}</div>
+
+                <div class="fila">
+                    <span class="label">Entrada:</span>
+                    <span>${entrada.toLocaleString()}</span>
+                </div>
+
+                <div class="fila">
+                    <span class="label">Salida:</span>
+                    <span class="${salida ? "ok" : "pendiente"}">
+                        ${salida ? salida.toLocaleString() : "Pendiente"}
+                    </span>
+                </div>
+            `;
+
             lista.appendChild(li);
+
         } else if (d.user === usuarioActual) {
-            li.textContent = `Entrada: ${entrada.toLocaleString()} | Salida: ${salida ? salida.toLocaleString() : "Pendiente"}`;
+
+            li.innerHTML = `
+                <div class="fila">
+                    <span class="label">Entrada:</span>
+                    <span>${entrada.toLocaleString()}</span>
+                </div>
+
+                <div class="fila">
+                    <span class="label">Salida:</span>
+                    <span class="${salida ? "ok" : "pendiente"}">
+                        ${salida ? salida.toLocaleString() : "Pendiente"}
+                    </span>
+                </div>
+            `;
+
             lista.appendChild(li);
         }
     });
@@ -176,17 +209,40 @@ function totalPorUsuarios(registros) {
 
 // 🔥 MOSTRAR TOTALES
 function mostrarTotales(registros) {
-    let texto = "";
+    const contenedor = document.getElementById("total");
+    contenedor.innerHTML = "";
 
     if (usuarioActual === "admin") {
         const totales = totalPorUsuarios(registros);
 
-        for (let user in totales) {
-            texto += `${user}: ${totales[user].toFixed(2)} horas\n`;
-        }
-    } else {
-        texto = "Tus horas: " + totalUsuario(registros, usuarioActual) + " horas";
-    }
+        const ordenados = Object.entries(totales)
+            .sort((a, b) => b[1] - a[1]);
 
-    document.getElementById("total").textContent = texto;
+        ordenados.forEach(([user, horas]) => {
+            const div = document.createElement("div");
+            div.classList.add("item-total");
+
+            div.innerHTML = `
+                <span class="user">${capitalizar(user)}</span>
+                <span class="horas">${horas.toFixed(2)} h</span>
+            `;
+
+            contenedor.appendChild(div);
+        });
+
+    } else {
+        const horas = totalUsuario(registros, usuarioActual);
+
+        const div = document.createElement("div");
+        div.classList.add("item-total", "unico");
+
+        div.textContent = `${horas} horas`;
+
+        contenedor.appendChild(div);
+    }
+}
+
+// 🔤 CAPITALIZAR
+function capitalizar(nombre) {
+    return nombre.charAt(0).toUpperCase() + nombre.slice(1);
 }

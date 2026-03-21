@@ -11,6 +11,7 @@
 
 <body>
 
+    <!-- LOGIN -->
     <section id="login" class="login">
         <article class="containerLog">
             <div class="form">
@@ -27,6 +28,7 @@
         </article>
     </section>
 
+    <!-- APP -->
     <div id="app" style="display:none;" class="app">
         <div class="container">
 
@@ -36,8 +38,10 @@
 
             <div class="columnas">
 
+                <!-- IZQUIERDA -->
                 <div class="col-izquierda">
                     <h3 class="seccion-titulo">Acciones</h3>
+
                     <div class="marcarEntradas">
                         <button class="botonesApp btn-entrada" onclick="marcarEntrada()">
                             <div class="icono">🟢</div>
@@ -48,24 +52,31 @@
                             <div class="icono">🔴</div>
                             <span>SALIR</span>
                         </button>
+
+                        <!-- Logout móvil -->
+                        <button class="salir visible-movil" onclick="logout()">
+                            <i class="fas fa-power-off"></i> CERRAR SESIÓN
+                        </button>
                     </div>
 
+                    <!-- TOTALES -->
                     <div class="total-semana">
                         <h3>HORAS TOTALES:</h3>
-                        <pre id="total">00:00</pre>
+                        <div id="total"></div>
                     </div>
                 </div>
 
+                <!-- DERECHA -->
                 <div class="col-derecha">
                     <h3 class="seccion-titulo">Sus Últimos Registros</h3>
-                    <ul id="lista">
-                    </ul>
+                    <ul id="lista"></ul>
                 </div>
 
             </div>
 
+            <!-- Logout web -->
             <footer>
-                <button class="salir" onclick="logout()">
+                <button class="salir visible-web" onclick="logout()">
                     <i class="fas fa-power-off"></i> CERRAR SESIÓN
                 </button>
             </footer>
